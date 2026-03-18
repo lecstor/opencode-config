@@ -1,0 +1,551 @@
+================================================================================
+REACT BEST PRACTICES SKILL - VISUAL LEARNING GUIDE
+================================================================================
+
+This file provides a visual overview of how React concepts connect and build
+upon each other. Use this to understand the big picture of React development.
+
+================================================================================
+1. REACT'S MENTAL MODEL
+================================================================================
+
+The 5-Step Process:
+
+          ┌─────────────────────────────────────────┐
+          │  1. Break UI into Component Hierarchy   │
+          │     (What are the component boundaries?)│
+          └──────────────────┬──────────────────────┘
+                             ▼
+          ┌─────────────────────────────────────────┐
+          │  2. Build Static Version                │
+          │     (No state, no interactivity yet)    │
+          └──────────────────┬──────────────────────┘
+                             ▼
+          ┌─────────────────────────────────────────┐
+          │  3. Identify Minimal State              │
+          │     (What changes? What's configuration?)
+          └──────────────────┬──────────────────────┘
+                             ▼
+          ┌─────────────────────────────────────────┐
+          │  4. Identify Where State Lives          │
+          │     (Parent? Child? Sibling? Context?)  │
+          └──────────────────┬──────────────────────┘
+                             ▼
+          ┌─────────────────────────────────────────┐
+          │  5. Add Inverse Data Flow               │
+          │     (Props down, callbacks up)          │
+          └─────────────────────────────────────────┘
+
+================================================================================
+2. COMPONENT STRUCTURE
+================================================================================
+
+How components relate to each other:
+
+    ┌──────────────────┐
+    │      App         │  Root component
+    └────────┬─────────┘
+             │
+      ┌──────┴──────┐
+      │             │
+    ┌─┴──┐      ┌──┴─┐
+    │Page│      │Nav │  Container components
+    └─┬──┘      └────┘
+      │
+   ┌──┴──────────┬─────────┐
+   │             │         │
+ ┌─┴──┐     ┌────┴─┐    ┌─┴──┐
+ │List│     │Detail│    │Form│  Feature components
+ └─┬──┘     └───┬──┘    └────┘
+   │            │
+ ┌─┴──┐     ┌──┴──┐
+ │Item│     │Card │       Reusable components
+ └────┘     └─────┘
+
+
+Key Principles:
+- Container components manage state and side effects
+- Presentational components receive props and render UI
+- Data flows DOWN as props
+- Events flow UP as callbacks
+
+================================================================================
+3. STATE PLACEMENT DECISION TREE
+================================================================================
+
+Does this data change?
+│
+├─ NO → It's a constant, not state
+│       (Put it outside the component)
+│
+└─ YES → Where is it used?
+    │
+    ├─ Only in ONE component → useState in that component
+    │                           ✓ Local state
+    │
+    └─ Multiple components → Are they related?
+        │
+        ├─ PARENT/CHILD or SIBLINGS → Lift state up
+        │                              ✓ Props down, callbacks up
+        │
+        └─ DEEPLY NESTED (3+ levels) → How deep?
+            │
+            ├─ 3-5 components deep → Try props first
+            │                        If drilling too much → Context
+            │                        ✓ Context API
+            │
+            └─ Entire app needs it → Use context
+                                     ✓ Context + custom hook
+
+
+Performance Considerations:
+
+useState (fast)
+  ↓ (only one component uses it)
+  
+Props (fast)
+  ↓ (1-2 levels down)
+  
+Context (medium)
+  ↓ (causes re-renders of all consumers)
+  
+External store (slowest)
+  ↓ (Redux, Zustand, etc.)
+
+================================================================================
+4. REACT HOOKS LANDSCAPE
+================================================================================
+
+Hooks by Category:
+
+STATE MANAGEMENT:
+├─ useState         Basic state
+├─ useReducer       Complex state transitions
+└─ useRef           Persistent values (no re-render)
+
+SIDE EFFECTS:
+├─ useEffect        After render, cleanup, dependencies
+└─ useLayoutEffect  Before paint (rare)
+
+SHARING DATA:
+├─ useContext       Access context values
+└─ Custom hooks     Reusable logic
+
+PERFORMANCE:
+├─ useMemo          Memoize expensive values
+├─ useCallback      Memoize functions
+└─ React.memo       Memoize components
+
+
+Hook Selection Guide:
+
+Need to manage state?
+├─ Simple value? → useState
+└─ Complex with actions? → useReducer
+
+Need to run code after render?
+├─ Simple side effect? → useEffect
+└─ Before paint? → useLayoutEffect (rare)
+
+Need to access global data?
+├─ From context? → useContext
+└─ Reuse logic? → Custom hook
+
+Performance issue?
+├─ Computing expensive value? → useMemo
+├─ Passing function to child? → useCallback
+└─ Component re-renders often? → React.memo
+
+================================================================================
+5. COMMON PATTERNS & WHEN TO USE
+================================================================================
+
+COMPOSITION:
+┌──────────────────┐
+│ <Card>           │  Children are content
+│   <Header/>      │
+│   <Body/>        │
+│ </Card>          │
+└──────────────────┘
+✓ Use when: Wrapping content, flexible structure
+✗ Don't: When you need prop control
+
+
+COMPOUND COMPONENTS:
+┌──────────────────┐
+│ <Tabs>           │  Related components work together
+│   <Tabs.Button/> │
+│   <Tabs.Content/>│
+│ </Tabs>          │
+└──────────────────┘
+✓ Use when: Multi-part UI component
+✗ Don't: For simple wrappers
+
+
+CUSTOM HOOKS:
+┌──────────────────┐
+│ function        │  Logic extraction
+│ useLocalStorage │
+│ (key, value)   │
+└──────────────────┘
+✓ Use when: Reusing stateful logic
+✗ Don't: For prop passing
+
+
+RENDER PROPS:
+┌──────────────────┐
+│ <DataProvider    │  Function as prop
+│   render={fn}    │  for rendering
+│ />               │
+└──────────────────┘
+✓ Use when: Flexible rendering logic
+✗ Don't: In modern React (use hooks instead)
+
+
+CONTEXT API:
+┌──────────────────┐
+│ <Provider>       │  Global-ish data
+│   <App/>         │
+│ </Provider>      │
+└──────────────────┘
+✓ Use when: Data needed by many unrelated components
+✗ Don't: For frequently changing data
+
+
+================================================================================
+6. DATA FLOW PATTERNS
+================================================================================
+
+ONE-WAY DATA FLOW (Props Down, Callbacks Up):
+
+Parent Component
+│
+├─ holds state: {count: 0}
+├─ defines handler: const handleIncrement = () => { setCount(count + 1) }
+│
+└─ renders Child with:
+   ├─ props: count={count}
+   └─ callback: onIncrement={handleIncrement}
+      │
+      └─ Child renders:
+         ├─ {count}
+         └─ <button onClick={onIncrement}>
+            │
+            └─ User clicks → calls onIncrement() → Parent state updates
+               │
+               └─ Parent re-renders with new count
+                  │
+                  └─ Child receives new count prop
+                     │
+                     └─ Child re-renders
+
+
+Two-way binding is DISCOURAGED in React - use one-way flow.
+
+
+FORM DATA FLOW (Controlled Input):
+
+User types
+    │
+    ↓
+onChange event fires
+    │
+    ↓
+Callback updates state
+    │
+    ↓
+Component re-renders with new state
+    │
+    ↓
+Input receives new value prop
+    │
+    ↓
+User sees updated input
+
+
+================================================================================
+7. STATE VS PROPS - DECISION MATRIX
+================================================================================
+
+                 │ State  │ Props  │ Context
+─────────────────┼────────┼────────┼─────────
+Mutable?         │ Yes    │ No     │ No
+Changes often?   │ Maybe  │ Rare   │ Rare
+Owns the data?   │ Yes    │ No     │ No
+Causes re-render?│ Yes    │ Yes    │ Sometimes
+Testing easy?    │ Easy   │ Easy   │ Medium
+Performance      │ Medium │ Fast   │ Medium
+
+Use when:        │        │        │
+- Data changes   │ ✓      │        │
+- Need state     │ ✓      │        │
+- Parent gives   │        │ ✓      │
+- Many siblings  │        │        │ ✓
+- Many levels    │        │        │ ✓
+- Global config  │        │        │ ✓
+
+================================================================================
+8. EFFECT DEPENDENCIES GUIDE
+================================================================================
+
+The dependency array controls when effects run:
+
+useEffect(() => {
+  // effect code
+}, [dependencies])
+
+
+DEPENDENCY ARRAY PATTERNS:
+
+[]                          ← Runs ONCE on mount
+                              (Fetch initial data, setup subscriptions)
+
+[variable]                  ← Runs when variable changes
+                              (Fetch when param changes)
+
+[var1, var2]                ← Runs when any changes
+                              (Multiple dependencies)
+
+[var1, var2, setFunction]   ← setState never changes
+                              (Safe to include)
+
+[/* missing */]             ← WRONG! Don't do this
+                              (Stale closures)
+
+
+COMMON MISTAKES:
+
+❌ useEffect(() => {
+     setCount(count + 1);
+   }, [count])
+   → Infinite loop! count changes, effect runs, sets count again...
+
+✓ useEffect(() => {
+    setCount(c => c + 1);
+  }, [])
+  → Safe! Using function form of setState, no dependency needed
+
+
+❌ useEffect(() => {
+     fetch(`/api/users/${userId}`);
+   }, [])
+   → Stale! Never refetches when userId changes
+
+✓ useEffect(() => {
+    fetch(`/api/users/${userId}`);
+  }, [userId])
+  → Correct! Refetches when userId changes
+
+================================================================================
+9. PERFORMANCE OPTIMIZATION FLOWCHART
+================================================================================
+
+Is the component slow?
+│
+├─ NO → Don't optimize (premature optimization is the root of all evil)
+│
+└─ YES → Profile to find the bottleneck
+    │
+    ├─ Rendering too often?
+    │  │
+    │  ├─ Function prop changing? → useCallback
+    │  ├─ Component memoizable? → React.memo
+    │  └─ Object/array dependency? → useMemo
+    │
+    ├─ Rendering expensive logic?
+    │  │
+    │  └─ Heavy computation? → useMemo
+    │
+    └─ Network request slow?
+       │
+       └─ Cache/deduplicate requests
+          (React Query, SWR, etc.)
+
+
+Optimization Cost/Benefit Matrix:
+
+              Easy to implement | Noticeable Benefit
+              ───────────────────────────────────────
+useCallback   ✓ Easy             │ ✗ Often minimal
+useMemo       ✓ Easy             │ ? Depends
+React.memo    ✓ Easy             │ ? Depends
+External lib  ✗ Complex          │ ✓ Big benefit
+
+
+Rule of thumb: Measure first, then optimize.
+
+================================================================================
+10. LEARNING PROGRESSION
+================================================================================
+
+Level 0: JavaScript Basics
+└─ Variables, functions, objects, arrays
+   └─ If you struggle here, review JavaScript first
+
+
+Level 1: React Fundamentals
+├─ Components as functions
+├─ JSX syntax
+├─ Props
+├─ Simple state (useState)
+└─ Basic side effects (useEffect)
+
+
+Level 2: Building Real Components
+├─ Forms (controlled inputs)
+├─ Lists with keys
+├─ Conditional rendering
+├─ Handling events
+└─ Managing multiple state values
+
+
+Level 3: Advanced State Patterns
+├─ Lifting state up
+├─ Passing callbacks
+├─ useReducer for complex state
+├─ Custom hooks
+└─ Initial state computations
+
+
+Level 4: Architecture & Organization
+├─ Component composition patterns
+├─ Context API
+├─ State placement decisions
+├─ Code organization
+└─ Testing considerations
+
+
+Level 5: Performance & Optimization
+├─ Understanding re-renders
+├─ useMemo and useCallback
+├─ React.memo
+├─ Profiling tools
+└─ Performance budgets
+
+
+Level 6: Advanced Patterns
+├─ Compound components
+├─ Render props (for knowledge)
+├─ HOCs (for knowledge)
+├─ Custom hooks for reusability
+└─ Complex state machines
+
+
+Most developers use Levels 1-3 daily.
+Levels 4-5 make you productive at scale.
+Level 6 is for specialized problems.
+
+================================================================================
+11. ANTI-PATTERNS AT A GLANCE
+================================================================================
+
+🚫 Mutating state directly
+   ❌ state.count++; setState(state)
+   ✅ setState(prev => prev + 1)
+
+🚫 Missing useEffect dependencies
+   ❌ useEffect(() => {...}, [])
+   ✅ useEffect(() => {...}, [dependency])
+
+🚫 Creating functions in render
+   ❌ <Child onClick={() => ...} />
+   ✅ useCallback(() => ..., [])
+
+🚫 Prop drilling too deep (5+ levels)
+   ❌ <L1 prop={p}> → <L2 prop={p}> → ... → <L5 prop={p} />
+   ✅ Context API with custom hook
+
+🚫 Context overuse (putting everything in one context)
+   ❌ const context = { user, theme, notifications, ... }
+   ✅ <UserProvider><ThemeProvider>...</ThemeProvider></UserProvider>
+
+🚫 State bloat (keeping too much state)
+   ❌ const [users, filtered, sorted, selected] = useState...
+   ✅ const [users, filter, sort] = useState...; compute filtered
+
+🚫 useEffect as constructor
+   ❌ useEffect(() => setCount(0), [])
+   ✅ useEffect(() => {...}, [dependency])
+
+🚫 Creating infinite loops
+   ❌ useEffect(() => setState(state + 1), [state])
+   ✅ useEffect(() => setState(s => s + 1), [])
+
+🚫 Switching between controlled/uncontrolled
+   ❌ <input value={value || ''} onChange={...} />
+   ✅ Always controlled or always uncontrolled
+
+🚫 Bad keys in lists
+   ❌ {list.map((item, index) => <Li key={index}... />)}
+   ✅ {list.map(item => <Li key={item.id}... />)}
+
+================================================================================
+12. DEBUGGING FLOWCHART
+================================================================================
+
+Something's wrong with my component
+│
+├─ Component doesn't re-render?
+│  └─ Mutating state directly? → Use spread/new array
+│
+├─ Component re-renders too often?
+│  └─ Unnecessary dependency? → Fix dependency array
+│
+├─ Data is wrong/stale?
+│  ├─ Missing useEffect dependency? → Add it
+│  └─ Props changed but nothing happened? → Add dependency
+│
+├─ Side effect runs infinitely?
+│  └─ Effect updates own dependency? → Use function form
+│
+├─ Form input doesn't update?
+│  └─ Not controlled? → Add value and onChange
+│
+├─ List items get wrong state?
+│  └─ Bad keys? → Use stable unique IDs
+│
+├─ State inconsistent?
+│  └─ Too much state? → Reduce to minimal state
+│
+└─ Not sure what's wrong?
+   └─ Check [ANTI-PATTERNS.md] for your symptom
+
+================================================================================
+13. WHEN TO USE EACH TOOL
+================================================================================
+
+useState           ← Managing UI state, form inputs, toggles
+useEffect          ← Data fetching, subscriptions, setup/cleanup
+useReducer         ← Multiple related state values, complex logic
+useContext         ← Global app state (theme, auth, language)
+Custom hook        ← Reusable logic, state extraction
+useMemo            ← Expensive computations (not often needed!)
+useCallback        ← Passing functions to memoized children
+React.memo         ← Expensive components (profile first!)
+Compound components ← Related UI parts working together
+Props              ← Passing data to children (shallow)
+Lifting state      ← Sharing state between siblings
+
+================================================================================
+14. QUICK REFERENCE
+================================================================================
+
+Props flow:           Parent → Child → Grandchild
+Callbacks flow:       Child → Parent ← Grandchild
+State lives:          Where it's first needed
+Effects run:          After every render (or based on dependencies)
+Keys matter:          For lists (use stable IDs, not indices)
+Mutable:              state can change, props cannot
+Re-render triggers:   state change, prop change, context change
+Optimization:         Measure first, then optimize
+Testing:              Easier with props, harder with context
+Components should:    Be pure (same props → same output)
+
+================================================================================
+
+For detailed explanations, see:
+- SKILL.md        - Complete reference
+- EXAMPLES.md     - Working code examples
+- ANTI-PATTERNS.md - Common mistakes
+- INDEX.md        - Topic index
+

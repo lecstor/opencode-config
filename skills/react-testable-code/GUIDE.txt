@@ -1,0 +1,350 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║         REACT TESTABLE CODE SKILL - COMPLETE GUIDE                         ║
+║  Writing React that's easy to test with Playwright E2E tests               ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+QUICK START
+───────────
+
+Choose your path:
+
+  🚀 FAST (75 minutes)
+     1. QUICKSTART.md → Get 5 templates working
+     2. ANTI-PATTERNS.md → Learn what NOT to do
+     3. EXAMPLES.md → Study real components
+
+  📚 THOROUGH (3+ hours)
+     1. INDEX.md → Understand the roadmap
+     2. SKILL.md → Learn principles deeply
+     3. ACCESSIBILITY-FOR-TESTING.md → Why it matters
+     4. COMPONENT-ARCHITECTURE.md → Design patterns
+     5. EXAMPLES.md → See it all in action
+     6. ANTI-PATTERNS.md → Learn from mistakes
+
+  🔍 REFERENCE
+     Use INDEX.md to jump to what you need
+
+
+KEY INSIGHT
+───────────
+
+Good React code = Testable React code
+
+When you use:
+  ✓ Semantic HTML
+  ✓ Proper accessibility
+  ✓ Clear component boundaries
+  ✓ Explicit data flow
+
+Then Playwright tests work automatically because they query the accessibility
+tree—the same tree assistive technologies use.
+
+
+FILE STRUCTURE
+──────────────
+
+README.md (370 lines)
+  └─ Overview and philosophy
+     Links to all documents
+
+INDEX.md (294 lines)
+  └─ Navigation guide
+     ├─ Learning paths (3 options)
+     ├─ Document summaries
+     └─ Cross-references
+
+SKILL.md (1,508 lines) ⭐ MAIN GUIDE
+  └─ The complete picture
+     ├─ Philosophy (why testability matters)
+     ├─ Thinking in React for Testability
+     ├─ Semantic HTML & Accessibility
+     ├─ Component Architecture
+     ├─ State Management
+     ├─ Props vs State
+     ├─ Data Flow (one-way, inverse)
+     ├─ Event Handlers & Forms
+     ├─ Composition Over Configuration
+     └─ Testing Patterns
+
+EXAMPLES.md (1,545 lines) ⭐ 30+ COMPONENTS
+  └─ Production-ready code
+     ├─ Form Components (5)
+     │   ├─ Search form
+     │   ├─ Login form
+     │   ├─ Contact form
+     │   ├─ Filter form
+     │   └─ Real-time validation
+     ├─ List & Tables (5)
+     │   ├─ Todo list
+     │   ├─ Data table
+     │   ├─ Expandable rows
+     │   ├─ Pagination
+     │   └─ Sorting
+     ├─ Modals & Dialogs (3)
+     │   ├─ Confirmation
+     │   ├─ Modal with form
+     │   └─ Alert
+     ├─ Compound Components (4)
+     │   ├─ Tabs
+     │   ├─ Accordion
+     │   ├─ Menu
+     │   └─ Breadcrumbs
+     ├─ Async & Loading (3)
+     │   ├─ Data fetching
+     │   ├─ Form submission
+     │   └─ Loading states
+     ├─ Validation (2)
+     │   ├─ Real-time validation
+     │   └─ Password strength
+     └─ Error Handling (1)
+         └─ Error boundary
+
+ANTI-PATTERNS.md (717 lines) ⭐ WHAT NOT TO DO
+  └─ 8 patterns that break tests
+     ├─ Divs with onClick (not buttons)
+     ├─ Missing labels
+     ├─ Test IDs instead of semantic HTML
+     ├─ Missing icon labels
+     ├─ State in wrong place
+     ├─ Props drilling
+     ├─ Boolean prop explosion
+     └─ No error handling
+     
+     Each shows: ❌ broken code → ✅ fix
+
+ACCESSIBILITY-FOR-TESTING.md (678 lines) ⭐ KEY CONNECTION
+  └─ Why accessibility = testability
+     ├─ The Accessibility Tree
+     ├─ How semantic HTML builds it
+     ├─ ARIA attributes
+     ├─ Semantic elements & roles
+     ├─ Form accessibility
+     ├─ Keyboard navigation
+     ├─ Images & alt text
+     └─ Accessibility checklist
+
+COMPONENT-ARCHITECTURE.md (747 lines) ⭐ DESIGN PATTERNS
+  └─ How to structure components
+     ├─ Single Responsibility
+     ├─ Composition over inheritance
+     ├─ Where state lives (decision tree)
+     ├─ Context vs Props
+     ├─ Custom Hooks
+     ├─ Compound Components
+     ├─ Avoiding prop drilling
+     └─ Performance optimization
+
+QUICKSTART.md (599 lines) ⭐ GET STARTED NOW
+  └─ 5 copy-paste templates
+     ├─ Form Component
+     ├─ Data Fetching
+     ├─ List with Add/Remove
+     ├─ Modal/Dialog
+     ├─ Tabs Component
+     ├─ Converting to semantic HTML
+     ├─ Playwright structure
+     ├─ Common queries
+     └─ Testable checklist
+
+
+LEARNING PATHS IN DETAIL
+────────────────────────
+
+FAST TRACK (75 minutes) - Get working immediately
+  ↓
+  QUICKSTART.md (20 min)
+    Learn 5 templates, common patterns
+  ↓
+  ANTI-PATTERNS.md (15 min)
+    See what breaks tests
+  ↓
+  EXAMPLES.md (40 min)
+    Study real implementations
+  ↓
+  Ready to build! Reference SKILL.md when needed.
+
+
+THOROUGH PATH (3+ hours) - Deep mastery
+  ↓
+  README.md (10 min)
+    Overview and philosophy
+  ↓
+  INDEX.md (10 min)
+    Navigate and understand structure
+  ↓
+  SKILL.md (60 min)
+    Learn the principles deeply
+  ↓
+  ACCESSIBILITY-FOR-TESTING.md (30 min)
+    Understand the critical connection
+  ↓
+  COMPONENT-ARCHITECTURE.md (40 min)
+    Master design patterns
+  ↓
+  EXAMPLES.md (45 min)
+    See everything in practice
+  ↓
+  ANTI-PATTERNS.md (20 min)
+    Learn from mistakes
+  ↓
+  Expert level! Ready for any React pattern.
+
+
+REFERENCE PATH - Jump to what you need
+  ↓
+  Start: INDEX.md
+  ↓
+  Use cross-references to jump to topics
+    - Specific component pattern? → EXAMPLES.md
+    - What breaks tests? → ANTI-PATTERNS.md
+    - Accessibility questions? → ACCESSIBILITY-FOR-TESTING.md
+    - Design questions? → COMPONENT-ARCHITECTURE.md
+    - Need templates? → QUICKSTART.md
+
+
+CORE CONCEPTS
+─────────────
+
+Semantic HTML
+  Where: SKILL.md, ACCESSIBILITY-FOR-TESTING.md, EXAMPLES.md, ANTI-PATTERNS.md
+  Why: Playwright queries accessibility tree, not DOM
+  Example:
+    ❌ <div onClick={...} role="button">Click</div>
+    ✅ <button onClick={...}>Click</button>
+
+Accessibility = Testability
+  Where: ACCESSIBILITY-FOR-TESTING.md (entire document)
+  Why: Accessibility tree = testing tree
+  Example:
+    ✅ <button aria-label="Search">🔍</button>  // testable
+    ❌ <button>🔍</button>                        // not testable
+
+Component Boundaries
+  Where: SKILL.md, COMPONENT-ARCHITECTURE.md, EXAMPLES.md
+  Why: Single responsibility makes testing easy
+  Example: Separate SearchForm, FilterPanel, Results components
+
+State Placement
+  Where: SKILL.md, COMPONENT-ARCHITECTURE.md, ANTI-PATTERNS.md
+  Why: State must be accessible to components that need it
+  Example: Filter state in parent, not in FilterPanel component
+
+Data Flow
+  Where: SKILL.md (entire Data Flow Patterns section)
+  Why: Unidirectional flow makes behavior predictable
+  Example: Props down (parent→child), Callbacks up (child→parent)
+
+Composition
+  Where: SKILL.md, COMPONENT-ARCHITECTURE.md, EXAMPLES.md
+  Why: Composing simple components is better than configurable components
+  Example: Tabs, Accordion, Modal compounds instead of huge components
+
+
+TESTING PHILOSOPHY
+──────────────────
+
+Tests should verify BEHAVIOR, not IMPLEMENTATION
+
+❌ Implementation tests (brittle):
+  test('input has class "search-input"', ...)
+  test('button has data-testid="submit"', ...)
+  test('component state is...', ...)
+
+✅ Behavior tests (resilient):
+  test('user can search by entering text', ...)
+  test('form submits on button click', ...)
+  test('results appear after searching', ...)
+
+Use getByRole, getByLabel, getByText — not CSS classes or test IDs
+
+
+QUICK REFERENCE
+───────────────
+
+Find button by accessible name:
+  await page.getByRole('button', { name: /submit/i }).click()
+
+Find input by label:
+  await page.getByLabel('Email Address').fill('user@example.com')
+
+Find text on page:
+  await expect(page.getByText('Success')).toBeVisible()
+
+Find heading:
+  await page.getByRole('heading', { level: 1 })
+
+Find element with aria-expanded:
+  await expect(button).toHaveAttribute('aria-expanded', 'true')
+
+Find alert/error message:
+  await expect(page.getByRole('alert')).toContainText('Error')
+
+Wait for live region:
+  await page.waitFor(() => getByText(/results/i).isVisible())
+
+
+STATISTICS
+──────────
+
+Total Files: 8
+Total Lines: 6,496
+Total Size: 184 KB
+
+Breakdown:
+  - SKILL.md: 1,508 lines (comprehensive guide)
+  - EXAMPLES.md: 1,545 lines (30+ components)
+  - COMPONENT-ARCHITECTURE.md: 747 lines (design patterns)
+  - ANTI-PATTERNS.md: 717 lines (8 anti-patterns)
+  - ACCESSIBILITY-FOR-TESTING.md: 678 lines (accessibility)
+  - QUICKSTART.md: 599 lines (5 templates + reference)
+  - README.md: 370 lines (overview)
+  - INDEX.md: 294 lines (navigation)
+
+
+GETTING HELP
+────────────
+
+Having trouble finding elements in tests?
+  → Read ACCESSIBILITY-FOR-TESTING.md
+  → Check EXAMPLES.md for similar patterns
+  → Review ANTI-PATTERNS.md (likely using anti-pattern)
+
+Need a specific component pattern?
+  → Search EXAMPLES.md for similar component
+  → Reference QUICKSTART.md if simple
+  → Study COMPONENT-ARCHITECTURE.md for design
+
+Want to understand React better?
+  → Read SKILL.md start to finish
+  → Study COMPONENT-ARCHITECTURE.md
+  → Review all EXAMPLES.md
+
+Wondering if something is wrong?
+  → Check ANTI-PATTERNS.md
+  → Verify ACCESSIBILITY-FOR-TESTING.md checklist
+  → Reference SKILL.md patterns
+
+
+NEXT STEPS
+──────────
+
+1. Choose your path (fast, thorough, or reference)
+2. Start with the first document in your path
+3. Follow cross-references as needed
+4. Practice with EXAMPLES.md components
+5. Build your own components using QUICKSTART.md templates
+6. Reference ANTI-PATTERNS.md to avoid mistakes
+7. Use SKILL.md for deep dives
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Location: /Users/jason/.config/opencode/skills/react-testable-code/
+
+The core philosophy throughout: Good React code is code that's easy to test.
+
+When you build with semantic HTML, proper accessibility, clear component
+boundaries, explicit data flow, and no reliance on implementation details,
+then Playwright E2E tests work perfectly.
+
+This isn't special knowledge for testing. It's just good React architecture.
