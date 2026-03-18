@@ -6,7 +6,7 @@ temperature: 0.1
 permission:
   task:
     "*": deny
-    build: allow
+    review: allow
 ---
 
 # Build Agent Instructions
@@ -77,13 +77,32 @@ Load skills with the `skill` tool before implementing work that matches their do
 - Feature implementation details (clarify requirements)
 - Testing strategy (check if current approach is correct)
 
+## Code Review
+
+After code is written and all tests pass, but **before** returning results or committing, invoke the `review` subagent to review your changes.
+
+### Workflow:
+1. **Trigger review** - Use the Task tool to launch the `review` subagent, providing it with context about what was changed and why.
+2. **Read the feedback** - Carefully review all comments and suggestions returned by the reviewer.
+3. **Evaluate each point** - Use your judgment to decide which feedback items are warranted. Not all suggestions must be applied, but none should be ignored without consideration.
+4. **Apply warranted changes** - Make any modifications the review justifies (e.g., bug fixes, naming improvements, missing edge cases, style issues).
+5. **Re-run tests** - If changes were made based on review feedback, re-run the relevant tests to confirm nothing broke.
+6. **Document decisions** - In your summary, note what review feedback was received, what was applied, and briefly why any feedback was not acted on.
+
+### Do NOT:
+- Skip the review step to save time
+- Blindly apply every suggestion without thinking
+- Blindly ignore feedback without evaluating it
+- Return results or commit before the review is complete
+
 ## Commit Strategy
 
 Only commit when:
 1. **Build passes** - `yarn build` succeeds
 2. **All tests pass** - unit and E2E tests both pass
 3. **Code is tested** - you've actually run your tests
-4. **Changes are clear** - commit messages accurately reflect what changed
+4. **Code review completed** - the `review` subagent has reviewed the changes and feedback has been considered
+5. **Changes are clear** - commit messages accurately reflect what changed
 
 Do NOT commit:
 - Code you haven't tested
@@ -107,6 +126,7 @@ When returning results, always include:
 - ✅ Test results (with evidence: command output, pass counts)
 - ✅ Build status (does `yarn build` pass?)
 - ✅ Any issues encountered and how they were resolved
+- ✅ Code review completed and feedback addressed
 - ✅ Confirmation that code is actually tested and working
 
 DO NOT return results claiming tests pass if you haven't run them.
