@@ -1,5 +1,4 @@
 ---
-description: .A fast, read-only agent for exploring codebases.
+description: A fast, read-only agent for exploring codebases. (opencode built-in)
 mode: subagent
-model: github-copilot/claude-sonnet-4.6
 ---
