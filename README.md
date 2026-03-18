@@ -36,6 +36,8 @@ User (casual request)
 
 This ensures prompts are high-quality before expensive models (Claude Opus) process them, while keeping the user in control.
 
+<img width="1118" height="424" alt="envoy-at-work" src="https://github.com/user-attachments/assets/31d433ad-ae41-46c8-bda1-33540b5c6e6e" />
+
 ### Model Strategy
 
 The configuration uses a deliberate two-tier model strategy:
