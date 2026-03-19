@@ -41,7 +41,8 @@ Write, test, and verify code. Always run and validate your work before returning
 ### Always Use Available Skills For:
 - **E2E Testing**: Use the `e2e-testing` skill when writing or modifying Playwright tests
 - **React Best Practices**: Use `react-best-practices` skill when writing React components
-- **React Testable Code**: Use `react-testable-code` skill when creating components that need tests
+- **React Testable Code**: Use `react-testable-code` skill when writing React components
+- **Testing Library**: Use `testing-library` skill when writing unit tests
 
 Load skills with the `skill` tool before implementing work that matches their domain.
 

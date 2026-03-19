@@ -77,6 +77,14 @@ await waitFor(() => {
 
 Simulate user actions like clicks, typing, and form submissions using **`userEvent`** (recommended) instead of `fireEvent`:
 
+> **⚠️ userEvent version matters!** The API changed significantly between v13 and v14.
+> - **v14+**: Uses `const user = userEvent.setup()` then `await user.click(...)` (async)
+> - **v13.x** (e.g., 13.5.0): Call methods directly — `userEvent.click(...)`, `userEvent.type(...)` (synchronous, no `.setup()`)
+>
+> **Always check the project's version** in `package.json` before writing tests. Using the wrong API will cause TypeScript errors or test failures.
+
+#### userEvent v14+ (with `.setup()`)
+
 ```javascript
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/react'
@@ -97,8 +105,29 @@ test('user interactions', async () => {
 })
 ```
 
+#### userEvent v13.x (direct calls, no `.setup()`)
+
+```javascript
+import userEvent from '@testing-library/user-event'
+import { render, screen } from '@testing-library/react'
+
+test('user interactions', () => {
+  render(<MyComponent />)
+  
+  // Click elements (synchronous — no await)
+  userEvent.click(screen.getByRole('button', { name: /submit/i }))
+  
+  // Type into inputs
+  userEvent.type(screen.getByLabelText(/username/i), 'john')
+  
+  // Clear and type
+  userEvent.clear(screen.getByLabelText(/password/i))
+  userEvent.type(screen.getByLabelText(/password/i), 'secret123')
+})
+```
+
 **Why `userEvent` instead of `fireEvent`?**
-- `fireEvent`: Dispatches low-level DOM events only (outdated)
+- `fireEvent`: Dispatches low-level DOM events only
 - `userEvent`: Simulates **full browser interactions** (recommended)
 - `userEvent` includes visibility & interactivity checks
 - `userEvent` catches more bugs (e.g., clicking hidden elements)
@@ -137,18 +166,22 @@ test('renders greeting', () => {
 ```javascript
 import userEvent from '@testing-library/user-event'
 
+// v14+ (with setup)
 test('submits form with user input', async () => {
   const user = userEvent.setup()
   render(<LoginForm />)
-  
-  // Fill form fields by their labels (async)
   await user.type(screen.getByLabelText(/username/i), 'alice')
   await user.type(screen.getByLabelText(/password/i), 'secret')
-  
-  // Submit the form
   await user.click(screen.getByRole('button', { name: /submit/i }))
-  
-  // Assert on result
+  expect(screen.getByText(/welcome alice/i)).toBeInTheDocument()
+})
+
+// v13.x (direct calls)
+test('submits form with user input', () => {
+  render(<LoginForm />)
+  userEvent.type(screen.getByLabelText(/username/i), 'alice')
+  userEvent.type(screen.getByLabelText(/password/i), 'secret')
+  userEvent.click(screen.getByRole('button', { name: /submit/i }))
   expect(screen.getByText(/welcome alice/i)).toBeInTheDocument()
 })
 ```
@@ -158,17 +191,20 @@ test('submits form with user input', async () => {
 ```javascript
 import userEvent from '@testing-library/user-event'
 
+// v14+ (with setup)
 test('shows message when checkbox is checked', async () => {
   const user = userEvent.setup()
   render(<HiddenMessage>Secret content</HiddenMessage>)
-  
-  // Initially hidden (queryBy returns null)
   expect(screen.queryByText('Secret content')).not.toBeInTheDocument()
-  
-  // User checks the checkbox
   await user.click(screen.getByLabelText(/show message/i))
-  
-  // Now visible
+  expect(screen.getByText('Secret content')).toBeInTheDocument()
+})
+
+// v13.x (direct calls)
+test('shows message when checkbox is checked', () => {
+  render(<HiddenMessage>Secret content</HiddenMessage>)
+  expect(screen.queryByText('Secret content')).not.toBeInTheDocument()
+  userEvent.click(screen.getByLabelText(/show message/i))
   expect(screen.getByText('Secret content')).toBeInTheDocument()
 })
 ```
@@ -178,19 +214,23 @@ test('shows message when checkbox is checked', async () => {
 ```javascript
 import userEvent from '@testing-library/user-event'
 
+// v14+ (with setup)
 test('displays results after API call', async () => {
   const user = userEvent.setup()
   render(<SearchResults />)
-  
-  // Fill search input
   await user.type(screen.getByLabelText(/search/i), 'react')
-  
-  // Click search button
   await user.click(screen.getByRole('button', { name: /search/i }))
-  
-  // Wait for results to appear (API call completes)
   const results = await screen.findByRole('list')
-  
+  expect(results).toBeInTheDocument()
+  expect(screen.getAllByRole('listitem')).toHaveLength(3)
+})
+
+// v13.x (direct calls — use findBy/waitFor for async state changes)
+test('displays results after API call', async () => {
+  render(<SearchResults />)
+  userEvent.type(screen.getByLabelText(/search/i), 'react')
+  userEvent.click(screen.getByRole('button', { name: /search/i }))
+  const results = await screen.findByRole('list')
   expect(results).toBeInTheDocument()
   expect(screen.getAllByRole('listitem')).toHaveLength(3)
 })
@@ -469,15 +509,71 @@ const component = render(<Counter />)
 expect(component.instance().state.count).toBe(1)
 ```
 
-**✅ GOOD:**
+**✅ GOOD (v14+):**
+```javascript
+render(<Counter />)
+const user = userEvent.setup()
+const button = screen.getByRole('button', { name: /increment/i })
+await user.click(button)
+expect(screen.getByText(/count: 1/i)).toBeInTheDocument()
+```
+
+**✅ GOOD (v13.x):**
 ```javascript
 render(<Counter />)
 const button = screen.getByRole('button', { name: /increment/i })
-await userEvent.click(button)
+userEvent.click(button)
 expect(screen.getByText(/count: 1/i)).toBeInTheDocument()
 ```
 
 **Why:** Internal state is an implementation detail. When you refactor the component to use a hook instead of a class, the bad test breaks. The good test still works because it only verifies user-visible behavior.
+
+---
+
+### 7. Using `fireEvent` When `userEvent` Should Be Used
+
+**❌ BAD:**
+```javascript
+fireEvent.click(screen.getByRole('button'))
+fireEvent.change(input, { target: { value: 'hello' } })
+```
+
+**✅ GOOD (v14+):**
+```javascript
+const user = userEvent.setup()
+await user.click(screen.getByRole('button'))
+await user.type(input, 'hello')
+```
+
+**✅ GOOD (v13.x):**
+```javascript
+userEvent.click(screen.getByRole('button'))
+userEvent.type(input, 'hello')
+```
+
+**Why:** `userEvent` simulates real browser interactions including focus, hover, and interactability checks. `fireEvent` just dispatches a raw DOM event.
+
+#### ⚠️ Legitimate `fireEvent` Exceptions (TIER 3)
+
+Some interactions **cannot** be simulated with `userEvent` and require `fireEvent`. Do NOT flag these as anti-patterns:
+
+1. **Gesture simulation** (mouseDown/mouseUp/touchStart/touchEnd sequences) — e.g., press-and-hold buttons that track timing between mouseDown and mouseUp events
+2. **Custom event data** — e.g., `fireEvent.mouseEnter(element, { clientX: 100, clientY: 200 })` for zoom/hover position tracking
+3. **Transition events** — `fireEvent.transitionEnd(element)` for CSS transition callbacks
+4. **Media events** — `fireEvent.ended(audioElement)` for audio/video playback completion
+5. **Low-level DOM events** with no userEvent equivalent — e.g., `wheel`, `animationEnd`, `resize`
+
+```javascript
+// ✅ LEGITIMATE fireEvent: gesture simulation (press-and-hold)
+fireEvent.mouseDown(button)
+fireEvent.mouseUp(button)  // component measures time between events
+
+// ✅ LEGITIMATE fireEvent: custom event data for zoom positioning
+fireEvent.mouseEnter(image, { clientX: 150, clientY: 200 })
+
+// ✅ LEGITIMATE fireEvent: CSS transition callback
+fireEvent.transitionEnd(element)
+```
 
 ---
 
@@ -581,7 +677,7 @@ START: Need to find an element?
 
 - **Don't write tautological tests** - Never render trivial markup (e.g., `render(<div>hello</div>)`) and assert on it. Tests must exercise real component logic — if the assertion only checks something you hardcoded in the test itself, delete it.
 
-- **Don't use `fireEvent`** - Use `userEvent` instead. It simulates full browser interactions while `fireEvent` only dispatches low-level DOM events.
+- **Don't use `fireEvent` for standard user interactions** - Use `userEvent` instead for clicks, typing, etc. However, `fireEvent` IS appropriate for gesture simulation (mouseDown/mouseUp sequences), custom event data (clientX/clientY), transition/animation events, and media events — see "Legitimate `fireEvent` Exceptions" above.
 
 ## Using Context7 for Testing-Library Docs
 
