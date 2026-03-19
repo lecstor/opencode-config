@@ -7,7 +7,7 @@ permission:
   task:
     "*": deny
   edit: deny
-  bash: deny
+  bash: allow
   lsp: deny
   todowrite: deny
 ---
