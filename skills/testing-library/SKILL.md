@@ -3,6 +3,32 @@ name: testing-library
 description: Write effective React component tests using testing-library by testing user interactions instead of implementation details
 ---
 
+## ⚠️ IMPORTANT: Determine `@testing-library/user-event` Version Before Writing Tests
+
+> **Before writing any test that uses `userEvent`, check the project's `package.json` (or `package-lock.json` / `yarn.lock`) for the installed version of `@testing-library/user-event`.** The API differs significantly between major versions.
+>
+> ### How to check
+> Look for `@testing-library/user-event` in the project's `package.json` `dependencies` or `devDependencies`. The version range (e.g., `"^13.5.0"` or `"^14.0.0"`) determines which API pattern to use.
+>
+> ---
+>
+> ### `@testing-library/user-event` v13 and below
+>
+> - **`userEvent.setup()` is NOT available** — it was introduced in v14. Any code using `const user = userEvent.setup()` will fail with a TypeError.
+> - **Use direct method calls:** `userEvent.click(element)`, `userEvent.type(element, text)`, `userEvent.clear(element)`, `userEvent.keyboard(text)`, etc.
+> - These direct calls are **synchronous** in v13.x — no `await` or `act()` wrapping is needed for the `userEvent` call itself (though you still need `await` for `findBy*` / `waitFor` when waiting for async state changes).
+>
+> ### `@testing-library/user-event` v14+
+>
+> - **Requires `userEvent.setup()`** to create an instance before use.
+> - **All interactions are async** — you must `await` every call.
+> - Direct calls (e.g., `userEvent.click(element)`) still exist for backwards compatibility but are **deprecated** and may be removed in future versions.
+> - The setup API enables more realistic interaction simulation (e.g., pointer state tracking, clipboard integration).
+>
+> ### `fireEvent` exceptions (all versions)
+>
+> Gesture simulation (longpress, swipe, drag via mouseDown/mouseUp/touchStart/touchEnd sequences), custom event data (clientX/clientY), transition/animation events, and media events **must** still use `fireEvent` — `userEvent` does not support these in any version. **Do NOT flag these as anti-patterns.**
+
 ## What I do
 
 I help you write React component tests that resemble how users actually interact with your application. Testing Library encourages querying elements by their accessibility attributes (role, label, text) rather than implementation details, resulting in tests that give you real confidence and don't break on refactors.
@@ -75,15 +101,35 @@ await waitFor(() => {
 
 ### User Interactions
 
-Simulate user actions like clicks, typing, and form submissions using **`userEvent`** (recommended) instead of `fireEvent`:
+Simulate user actions like clicks, typing, and form submissions using **`userEvent`** (recommended) instead of `fireEvent`.
 
-> **⚠️ userEvent version matters!** The API changed significantly between v13 and v14.
-> - **v14+**: Uses `const user = userEvent.setup()` then `await user.click(...)` (async)
-> - **v13.x** (e.g., 13.5.0): Call methods directly — `userEvent.click(...)`, `userEvent.type(...)` (synchronous, no `.setup()`)
->
-> **Always check the project's version** in `package.json` before writing tests. Using the wrong API will cause TypeScript errors or test failures.
+> **Check the project's `@testing-library/user-event` version** to determine the correct pattern:
 
-#### userEvent v14+ (with `.setup()`)
+#### `@testing-library/user-event` v13 and below (direct, synchronous calls)
+
+```javascript
+import userEvent from '@testing-library/user-event'
+import { render, screen } from '@testing-library/react'
+
+test('user interactions', () => {
+  render(<MyComponent />)
+  
+  // Click elements (synchronous — no await needed for the userEvent call)
+  userEvent.click(screen.getByRole('button', { name: /submit/i }))
+  
+  // Type into inputs
+  userEvent.type(screen.getByLabelText(/username/i), 'john')
+  
+  // Clear and type
+  userEvent.clear(screen.getByLabelText(/password/i))
+  userEvent.type(screen.getByLabelText(/password/i), 'secret123')
+  
+  // Keyboard shortcuts
+  userEvent.keyboard('{Enter}')
+})
+```
+
+#### `@testing-library/user-event` v14+ (setup instance, async calls)
 
 ```javascript
 import userEvent from '@testing-library/user-event'
@@ -93,7 +139,7 @@ test('user interactions', async () => {
   const user = userEvent.setup()
   render(<MyComponent />)
   
-  // Click elements
+  // Click elements (async — must await every call)
   await user.click(screen.getByRole('button', { name: /submit/i }))
   
   // Type into inputs
@@ -102,27 +148,9 @@ test('user interactions', async () => {
   // Clear and type
   await user.clear(screen.getByLabelText(/password/i))
   await user.type(screen.getByLabelText(/password/i), 'secret123')
-})
-```
-
-#### userEvent v13.x (direct calls, no `.setup()`)
-
-```javascript
-import userEvent from '@testing-library/user-event'
-import { render, screen } from '@testing-library/react'
-
-test('user interactions', () => {
-  render(<MyComponent />)
   
-  // Click elements (synchronous — no await)
-  userEvent.click(screen.getByRole('button', { name: /submit/i }))
-  
-  // Type into inputs
-  userEvent.type(screen.getByLabelText(/username/i), 'john')
-  
-  // Clear and type
-  userEvent.clear(screen.getByLabelText(/password/i))
-  userEvent.type(screen.getByLabelText(/password/i), 'secret123')
+  // Keyboard shortcuts
+  await user.keyboard('{Enter}')
 })
 ```
 
@@ -163,20 +191,11 @@ test('renders greeting', () => {
 
 ### 2. Testing Form Interaction
 
+#### v13 and below
+
 ```javascript
 import userEvent from '@testing-library/user-event'
 
-// v14+ (with setup)
-test('submits form with user input', async () => {
-  const user = userEvent.setup()
-  render(<LoginForm />)
-  await user.type(screen.getByLabelText(/username/i), 'alice')
-  await user.type(screen.getByLabelText(/password/i), 'secret')
-  await user.click(screen.getByRole('button', { name: /submit/i }))
-  expect(screen.getByText(/welcome alice/i)).toBeInTheDocument()
-})
-
-// v13.x (direct calls)
 test('submits form with user input', () => {
   render(<LoginForm />)
   userEvent.type(screen.getByLabelText(/username/i), 'alice')
@@ -186,21 +205,28 @@ test('submits form with user input', () => {
 })
 ```
 
-### 3. Testing Visibility Toggle
+#### v14+
 
 ```javascript
 import userEvent from '@testing-library/user-event'
 
-// v14+ (with setup)
-test('shows message when checkbox is checked', async () => {
+test('submits form with user input', async () => {
   const user = userEvent.setup()
-  render(<HiddenMessage>Secret content</HiddenMessage>)
-  expect(screen.queryByText('Secret content')).not.toBeInTheDocument()
-  await user.click(screen.getByLabelText(/show message/i))
-  expect(screen.getByText('Secret content')).toBeInTheDocument()
+  render(<LoginForm />)
+  await user.type(screen.getByLabelText(/username/i), 'alice')
+  await user.type(screen.getByLabelText(/password/i), 'secret')
+  await user.click(screen.getByRole('button', { name: /submit/i }))
+  expect(screen.getByText(/welcome alice/i)).toBeInTheDocument()
 })
+```
 
-// v13.x (direct calls)
+### 3. Testing Visibility Toggle
+
+#### v13 and below
+
+```javascript
+import userEvent from '@testing-library/user-event'
+
 test('shows message when checkbox is checked', () => {
   render(<HiddenMessage>Secret content</HiddenMessage>)
   expect(screen.queryByText('Secret content')).not.toBeInTheDocument()
@@ -209,27 +235,49 @@ test('shows message when checkbox is checked', () => {
 })
 ```
 
-### 4. Testing Async Operations
+#### v14+
 
 ```javascript
 import userEvent from '@testing-library/user-event'
 
-// v14+ (with setup)
+test('shows message when checkbox is checked', async () => {
+  const user = userEvent.setup()
+  render(<HiddenMessage>Secret content</HiddenMessage>)
+  expect(screen.queryByText('Secret content')).not.toBeInTheDocument()
+  await user.click(screen.getByLabelText(/show message/i))
+  expect(screen.getByText('Secret content')).toBeInTheDocument()
+})
+```
+
+### 4. Testing Async Operations
+
+#### v13 and below
+
+```javascript
+import userEvent from '@testing-library/user-event'
+
+// Use findBy/waitFor for async state changes after userEvent calls
+test('displays results after API call', async () => {
+  render(<SearchResults />)
+  userEvent.type(screen.getByLabelText(/search/i), 'react')
+  userEvent.click(screen.getByRole('button', { name: /search/i }))
+  const results = await screen.findByRole('list')
+  expect(results).toBeInTheDocument()
+  expect(screen.getAllByRole('listitem')).toHaveLength(3)
+})
+```
+
+#### v14+
+
+```javascript
+import userEvent from '@testing-library/user-event'
+
+// Use findBy/waitFor for async state changes after userEvent calls
 test('displays results after API call', async () => {
   const user = userEvent.setup()
   render(<SearchResults />)
   await user.type(screen.getByLabelText(/search/i), 'react')
   await user.click(screen.getByRole('button', { name: /search/i }))
-  const results = await screen.findByRole('list')
-  expect(results).toBeInTheDocument()
-  expect(screen.getAllByRole('listitem')).toHaveLength(3)
-})
-
-// v13.x (direct calls — use findBy/waitFor for async state changes)
-test('displays results after API call', async () => {
-  render(<SearchResults />)
-  userEvent.type(screen.getByLabelText(/search/i), 'react')
-  userEvent.click(screen.getByRole('button', { name: /search/i }))
   const results = await screen.findByRole('list')
   expect(results).toBeInTheDocument()
   expect(screen.getAllByRole('listitem')).toHaveLength(3)
@@ -509,20 +557,20 @@ const component = render(<Counter />)
 expect(component.instance().state.count).toBe(1)
 ```
 
-**✅ GOOD (v14+):**
-```javascript
-render(<Counter />)
-const user = userEvent.setup()
-const button = screen.getByRole('button', { name: /increment/i })
-await user.click(button)
-expect(screen.getByText(/count: 1/i)).toBeInTheDocument()
-```
-
-**✅ GOOD (v13.x):**
+**✅ GOOD (v13 and below):**
 ```javascript
 render(<Counter />)
 const button = screen.getByRole('button', { name: /increment/i })
 userEvent.click(button)
+expect(screen.getByText(/count: 1/i)).toBeInTheDocument()
+```
+
+**✅ GOOD (v14+):**
+```javascript
+const user = userEvent.setup()
+render(<Counter />)
+const button = screen.getByRole('button', { name: /increment/i })
+await user.click(button)
 expect(screen.getByText(/count: 1/i)).toBeInTheDocument()
 ```
 
@@ -538,6 +586,12 @@ fireEvent.click(screen.getByRole('button'))
 fireEvent.change(input, { target: { value: 'hello' } })
 ```
 
+**✅ GOOD (v13 and below):**
+```javascript
+userEvent.click(screen.getByRole('button'))
+userEvent.type(input, 'hello')
+```
+
 **✅ GOOD (v14+):**
 ```javascript
 const user = userEvent.setup()
@@ -545,15 +599,9 @@ await user.click(screen.getByRole('button'))
 await user.type(input, 'hello')
 ```
 
-**✅ GOOD (v13.x):**
-```javascript
-userEvent.click(screen.getByRole('button'))
-userEvent.type(input, 'hello')
-```
-
 **Why:** `userEvent` simulates real browser interactions including focus, hover, and interactability checks. `fireEvent` just dispatches a raw DOM event.
 
-#### ⚠️ Legitimate `fireEvent` Exceptions (TIER 3)
+#### ⚠️ Legitimate `fireEvent` Exceptions (all versions)
 
 Some interactions **cannot** be simulated with `userEvent` and require `fireEvent`. Do NOT flag these as anti-patterns:
 
