@@ -13,6 +13,50 @@ This repository lives at `~/.config/opencode` and serves as the global configura
 
 The default agent is `build-envoy`, an intermediary that refines user requests before dispatching them to the `build` subagent for execution.
 
+## Setup
+
+### Installation
+
+There are two ways to use this configuration:
+
+**Use as-is** — Clone or copy the entire repository into your OpenCode config folder:
+
+```sh
+git clone <repo-url> ~/.config/opencode
+```
+
+This gives you the full agent system, all skills, commands, and MCP integrations out of the box.
+
+**Pick and choose** — If you already have an OpenCode config folder, copy only the pieces you want into it. The main building blocks are:
+
+- `agents/` — Agent definitions (copy individual `.md` files)
+- `skills/` — Loadable knowledge bundles (copy entire skill directories)
+- `commands/` — Custom slash commands (copy individual `.md` files)
+- `opencode.jsonc` — MCP server configuration (merge the relevant sections into your existing config)
+
+### Context7 API Key
+
+The Context7 MCP integration (used by the `docs-lookup` agent to query library documentation) requires an API key. The key is referenced in `opencode.jsonc` via the `CONTEXT7_API_KEY` environment variable:
+
+```jsonc
+"headers": {
+  "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
+}
+```
+
+To set it up:
+
+1. Get a free API key from [context7.com](https://context7.com).
+2. Add the following line to `~/.zshenv` (or `~/.zshrc`):
+
+   ```sh
+   export CONTEXT7_API_KEY="your-key-here"
+   ```
+
+3. Restart your shell, or run `source ~/.zshenv` to pick up the change immediately.
+
+Once the variable is set, OpenCode will pass the key to Context7 automatically when the `docs-lookup` agent resolves library IDs or queries documentation.
+
 ## How It Works
 
 ### The Envoy Pattern
