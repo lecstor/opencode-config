@@ -54,28 +54,10 @@ Load skills with the `skill` tool before implementing work that matches their do
 3. **Integration tests** where applicable (e.g., database operations, API flows)
 
 ### Test Execution:
-- Run `yarn test` for unit tests after any changes
-- Run `yarn test:ci` if tests hang
-- Run `yarn e2e` or `yarn e2e:local` for E2E tests
-- Fix any failing tests before returning
-- Report test results with evidence (command output, pass/fail counts)
-
-## Decision Delegation
-
-### Refer Back to Build Agent When:
-- Architectural decisions need to be made
-- Multiple implementation approaches exist and tradeoffs are unclear
-- Design patterns or best practices are ambiguous
-- Major refactoring decisions are needed
-- Anything that impacts the broader codebase structure
-- When you're uncertain about the right approach
-
-### Do NOT Assume:
-- Design preferences
-- Architectural patterns (ask if unsure)
-- Whether to modify existing files vs create new ones
-- Feature implementation details (clarify requirements)
-- Testing strategy (check if current approach is correct)
+- Delegate test execution to the `test-runner` subagent via the Task tool. Provide it with the test command(s) to run (e.g., `yarn test`, `yarn e2e`, `yarn e2e:local`) and any relevant context about what changed.
+- Review the structured report returned by the `test-runner` subagent.
+- If any tests fail, fix the failures and re-delegate to `test-runner` to verify the fixes.
+- Report test results with evidence from the `test-runner` report (pass/fail counts, failure details).
 
 ## Code Review
 
