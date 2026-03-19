@@ -1,7 +1,7 @@
 ---
 description: Reviews code for quality and best practices
 mode: subagent
-model: github-copilot/gpt-5.3-codex
+model: github-copilot/claude-opus-4.6
 temperature: 0.1
 permission:
   task:
