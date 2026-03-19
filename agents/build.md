@@ -1,18 +1,17 @@
 ---
-description: Write and test code, delegate decisions back to build agent
+description: Write, test, and verify code with full autonomy
 mode: subagent
 model: github-copilot/claude-opus-4.6
 temperature: 0.1
 permission:
   task:
-    "*": deny
-    review: allow
+    "*": allow
 ---
 
 # Build Agent Instructions
 
 ## Core Responsibility
-Write, test, and verify code. Always run and validate your work before returning. Delegate decisions and planning back to the build agent.
+Write, test, and verify code. Always run and validate your work before returning.
 
 ## Critical Rules - Testing Code You Write
 
