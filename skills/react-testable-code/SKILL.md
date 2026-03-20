@@ -1,3 +1,8 @@
+---
+name: react-testable-code
+description: Write React components designed to be easily tested with minimal mocking or implementation detail awareness
+---
+
 # React Code That's Easy to Test with Playwright
 
 > **Core Insight:** React code that's easy to test with E2E tests is React code that's good. Good React code is built on semantic HTML, accessibility, and clear component hierarchies. These same practices make it trivial for Playwright to find and interact with your UI.

@@ -1,3 +1,8 @@
+---
+name: react-best-practices
+description: Write React components following idiomatic patterns, hooks best practices, and performance optimizations
+---
+
 # React Best Practices Skill
 
 A comprehensive guide to React development patterns, design decisions, and proven techniques for building maintainable, performant React applications.

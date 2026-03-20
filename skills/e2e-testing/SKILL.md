@@ -1,3 +1,8 @@
+---
+name: e2e-testing
+description: Write end-to-end tests using Playwright, covering user workflows across the application
+---
+
 # Playwright E2E Testing with React Testing Library Best Practices
 
 ## Overview
