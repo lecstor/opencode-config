@@ -6,9 +6,10 @@ temperature: 0.1
 permission:
   task:
     "*": deny
+    docs-lookup: allow
+    explore: allow
+    search: allow
   edit: deny
-  bash: allow
-  lsp: deny
   todowrite: deny
 ---
 
