@@ -1,7 +1,7 @@
 ---
 description: Execute test suites and report results — does not write or modify code
 mode: subagent
-model: github-copilot/claude-haiku-4.6
+model: github-copilot/claude-haiku-4.5
 temperature: 0.1
 permission:
   bash: allow
