@@ -9,6 +9,7 @@ This repository lives at `~/.config/opencode` and serves as the global configura
 - **11 agents** organised into primary (user-facing) and subagent (task-focused) roles
 - **4 skills** providing domain-specific knowledge that agents can load on demand
 - **1 custom command** for structured git commits
+- **1 plugin** for dynamic context pruning to reduce token usage in long sessions
 - **2 MCP integrations** for browser DevTools and library documentation lookup
 
 The default agent is `build-envoy`, an intermediary that refines user requests before dispatching them to the `build` subagent for execution.
@@ -181,6 +182,58 @@ Two Model Context Protocol (MCP) servers extend agent capabilities:
 - **Used by:** `docs-lookup` agent
 - **Capabilities:** Resolves library names to IDs, queries up-to-date documentation and code examples for any programming library or framework
 
+## Plugins
+
+### Dynamic Context Pruning (DCP)
+
+The [`@tarquinen/opencode-dcp`](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning) plugin automatically reduces token usage by intelligently managing conversation context during long sessions. It is pinned to version **3.0.4** in `opencode.jsonc`:
+
+```jsonc
+"plugin": ["@tarquinen/opencode-dcp@3.0.4"]
+```
+
+#### What It Does
+
+DCP intercepts messages before they are sent to the LLM and prunes redundant or stale content — without modifying your actual session history. It operates through four strategies:
+
+- **Compress** — Exposes a `compress` tool to the model. Instead of OpenCode's built-in compaction (which triggers on the entire session at the context limit), Compress lets the model selectively summarise completed task ranges. Nested compressions preserve earlier summaries, and protected tool outputs (subagents, skills) are always retained.
+- **Deduplication** — Detects repeated tool calls (same tool, same arguments) and keeps only the most recent output.
+- **Purge Errors** — Prunes the potentially large input content from errored tool calls after a configurable number of turns (default: 4), while preserving the error messages themselves.
+- **Supersede Writes** — Prunes write tool inputs when the file has been subsequently read, since the read output already contains the current content.
+
+#### Why It's Here
+
+Long coding sessions with the `build` agent — which reads, writes, tests, and iterates on code — can accumulate large amounts of context. DCP keeps sessions productive by trimming stale content before it pushes the model towards hallucination or triggers a costly full-context compaction.
+
+For request-based billing providers like GitHub Copilot (used in this configuration), prompt-cache misses from pruning have no cost impact since billing is per-request, not per-token.
+
+#### Configuration
+
+DCP uses its own config file at `~/.config/opencode/dcp.jsonc`, separate from the main `opencode.jsonc`. The project includes a minimal config that references the plugin's JSON schema:
+
+```jsonc
+{
+  "$schema": "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json"
+}
+```
+
+All settings use defaults (compression enabled, deduplication enabled, error purging after 4 turns). Override any setting by adding it to `dcp.jsonc` — project-level configs in `.opencode/dcp.jsonc` take priority over the global file.
+
+#### Commands
+
+The plugin registers a `/dcp` slash command with subcommands:
+
+| Command | Description |
+|---------|-------------|
+| `/dcp` | Shows available DCP commands |
+| `/dcp context` | Token usage breakdown for the current session |
+| `/dcp stats` | Cumulative pruning statistics across sessions |
+| `/dcp sweep [n]` | Prune tool outputs since last user message (optionally last *n* tools) |
+| `/dcp compress [focus]` | Trigger a manual compression, optionally focused on a topic |
+| `/dcp decompress <id>` | Restore a specific compression by ID |
+| `/dcp recompress <id>` | Re-apply a previously decompressed compression by ID |
+| `/dcp manual [on\|off]` | Toggle manual mode (disables autonomous compression) |
+
 ## Configuration
 
 ### `opencode.jsonc`
@@ -197,7 +250,8 @@ The main configuration file:
   },
   "experimental": {
     "disable_paste_summary": true
-  }
+  },
+  "plugin": ["@tarquinen/opencode-dcp@3.0.4"]
 }
 ```
 
@@ -229,7 +283,8 @@ Each skill directory contains a `SKILL.md` with optional YAML frontmatter and co
 
 ```
 ~/.config/opencode/
-├── opencode.jsonc           # Main configuration (MCP, default agent, experiments)
+├── opencode.jsonc           # Main configuration (MCP, plugins, default agent, experiments)
+├── dcp.jsonc                # Dynamic Context Pruning plugin configuration
 ├── agents/                  # Agent definitions (11 agents)
 │   ├── build-envoy.md       # Default agent — refines prompts for @build
 │   ├── plan-envoy.md        # Refines prompts for @plan

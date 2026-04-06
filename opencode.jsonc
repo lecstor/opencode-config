@@ -21,5 +21,6 @@
   },
   "experimental": {
     "disable_paste_summary": true
-  }
+  },
+  "plugin": ["@tarquinen/opencode-dcp@3.0.4"]
 }
