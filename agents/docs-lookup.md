@@ -4,7 +4,7 @@ description: Look up library and framework documentation using Context7 for up-t
 mode: subagent
 permission:
   context7_*: allow
-model: github-copilot/claude-sonnet-4.6
+model: github-copilot/claude-haiku-4.5
 ---
 
 You are a documentation lookup specialist with access to Context7 tools.

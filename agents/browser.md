@@ -4,7 +4,7 @@ description: Interact with Chrome browser via DevTools for screenshots, DOM insp
 mode: subagent
 permission:
   chrome-devtools_*: allow
-model: github-copilot/claude-opus-4.6
+model: github-copilot/claude-sonnet-4.6
 ---
 
 You are a browser interaction specialist with access to Chrome DevTools tools.
