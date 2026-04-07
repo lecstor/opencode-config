@@ -6,13 +6,15 @@ A multi-agent configuration for [OpenCode](https://opencode.ai) that defines a s
 
 This repository lives at `~/.config/opencode` and serves as the global configuration for OpenCode. It defines:
 
-- **11 agents** organised into primary (user-facing) and subagent (task-focused) roles
+- **10 agents** organised into primary (user-facing) and subagent (task-focused) roles
 - **4 skills** providing domain-specific knowledge that agents can load on demand
 - **1 custom command** for structured git commits
 - **1 plugin** for dynamic context pruning to reduce token usage in long sessions
 - **2 MCP integrations** for browser DevTools and library documentation lookup
 
-The default agent is `build-envoy`, an intermediary that refines user requests before dispatching them to the `build` subagent for execution.
+The default agent is `build`, which writes, tests, and verifies code with full autonomy.
+
+> **Looking for the Envoy pattern?** The [`envoy`](../../tree/envoy) branch has the previous setup where lightweight envoy agents act as intermediaries that refine user requests before dispatching them to subagents. If you prefer that workflow, check out that branch instead.
 
 ## Setup
 
@@ -60,37 +62,15 @@ Once the variable is set, OpenCode will pass the key to Context7 automatically w
 
 ## How It Works
 
-### The Envoy Pattern
-
-The core workflow uses an "Envoy" pattern — a lightweight primary agent that acts as a linguistic bridge between the user and a powerful subagent:
-
-```
-User (casual request)
-  └─> Envoy (refines prompt, asks for confirmation)
-        └─> Subagent (executes the refined task)
-              └─> Envoy (returns full response verbatim)
-                    └─> User
-```
-
-1. **User** types a casual, possibly rough request.
-2. **Envoy** rewrites it into a clear, structured prompt and presents it back for approval.
-3. **User** confirms (or iterates on the draft).
-4. **Envoy** dispatches the approved prompt to the target subagent.
-5. **Subagent** performs the work (code, planning, review, etc.) and returns results.
-6. **Envoy** relays the subagent's full response verbatim — no summarisation, no truncation.
-
-This ensures prompts are high-quality before expensive models (Claude Opus) process them, while keeping the user in control.
-
-<img width="1118" height="424" alt="envoy-at-work" src="https://github.com/user-attachments/assets/31d433ad-ae41-46c8-bda1-33540b5c6e6e" />
-
 ### Model Strategy
 
-The configuration uses a deliberate two-tier model strategy:
+The configuration uses a deliberate three-tier model strategy:
 
 | Tier | Model | Used By | Purpose |
 |------|-------|---------|---------|
-| **Fast / Cheap** | `claude-sonnet-4.6` | Envoys, browser, docs-lookup, explore, search | Prompt refinement, read-only tasks, lightweight operations |
-| **Powerful** | `claude-opus-4.6` | build, plan, coder, review, general | Code generation, architectural planning, deep analysis |
+| **Fast / Cheap** | `claude-sonnet-4.6` | coder, review, browser | Scoped code edits, code review, multi-step browser interactions |
+| **Powerful** | `claude-opus-4.6` | build, plan, general | Code generation, architectural planning, complex research |
+| **Minimal** | `claude-haiku-4.5` | test-runner, search, explore, docs-lookup | Test execution, file search, codebase exploration, documentation lookup |
 
 ## Agent Architecture
 
@@ -100,8 +80,9 @@ These agents are directly accessible to the user. They appear as selectable agen
 
 | Agent | Model | Description |
 |-------|-------|-------------|
-| **build-envoy** (default) | Sonnet 4.6 | Refines casual requests into precise prompts, dispatches to `@build` after user confirmation |
-| **plan-envoy** | Sonnet 4.6 | Same envoy pattern, but dispatches to `@plan` for analysis and planning tasks |
+| **build** (default) | Opus 4.6 | Writes, tests, and verifies code. Must run all code it writes. Delegates to subagents for test execution and code review. |
+| **plan** | Opus 4.6 | Read-only planning agent. Explores the codebase, produces structured implementation plans with file-level changes, ordering, risks, and testing strategy. |
+| **general** | Opus 4.6 | General-purpose research and execution agent with full tool access. |
 
 ### Subagents (Task-Focused)
 
@@ -109,15 +90,13 @@ These agents are invoked by primary agents or other subagents. Each has a tightl
 
 | Agent | Model | Permissions | Description |
 |-------|-------|-------------|-------------|
-| **build** | Opus 4.6 | Full tools + task(build) | Writes, tests, and verifies code. Must run all code it writes. |
-| **plan** | Opus 4.6 | Read-only (no edit, no todo) | Restricted agent for planning and analysis only |
-| **coder** | Opus 4.6 | Full file system + git | Code writing and editing specialist |
-| **review** | Opus 4.6 | Read-only (no edit, bash, lsp) | Reviews code for quality; provides feedback without making changes |
-| **search** | Sonnet 4.6 | Read-only (glob, grep, read) | Fast file and code search using patterns |
-| **explore** | Sonnet 4.6 | Read-only | Fast, lightweight codebase exploration |
+| **coder** | Sonnet 4.6 | File editing (no bash, no task except search/explore/docs-lookup) | Code writing and editing specialist |
+| **review** | Sonnet 4.6 | Read-only (no edit, bash, lsp) | Reviews code for quality; provides feedback without making changes |
+| **test-runner** | Haiku 4.5 | Bash only (no edit, task, lsp) | Executes test suites and reports structured results without modifying code |
+| **search** | Haiku 4.5 | Read-only (glob, grep, read) | Fast file and code search using patterns |
+| **explore** | Haiku 4.5 | Read-only (glob, grep, read) | Fast, lightweight codebase exploration |
 | **browser** | Sonnet 4.6 | chrome-devtools_* | Interacts with Chrome via DevTools MCP for screenshots, DOM inspection, navigation, performance traces |
-| **docs-lookup** | Sonnet 4.6 | context7_* | Looks up library/framework documentation using Context7 MCP |
-| **general** | Opus 4.6 | Unrestricted general-purpose agent with full tool access |
+| **docs-lookup** | Haiku 4.5 | context7_* | Looks up library/framework documentation using Context7 MCP |
 
 ### Permission Model
 
@@ -135,10 +114,11 @@ permission:
 ```
 
 Key design decisions:
-- **Envoys are tool-less** — they can only spawn their designated subagent. No file access, no shell, no editing.
 - **Review is read-only** — can read code but cannot modify it, enforcing advisory-only feedback.
 - **Plan is edit-restricted** — can read and analyse but cannot make changes.
-- **Build must test** — the build agent's system prompt mandates running all code it writes before returning results.
+- **Coder is edit-only** — can read and write files but cannot run commands or spawn most subagents (search, explore, and docs-lookup are allowed for context gathering).
+- **Test-runner is execution-only** — can run shell commands but cannot edit files or spawn subagents.
+- **Build must test** — the build agent's system prompt mandates running all code it writes before returning results. Non-code changes (config, docs) have a lighter path that skips tests and review when appropriate.
 
 ## Skills
 
@@ -243,7 +223,7 @@ The main configuration file:
 ```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
-  "default_agent": "build-envoy",
+  "default_agent": "build",
   "mcp": {
     "chrome-devtools": { ... },
     "context7": { ... }
@@ -285,14 +265,13 @@ Each skill directory contains a `SKILL.md` with optional YAML frontmatter and co
 ~/.config/opencode/
 ├── opencode.jsonc           # Main configuration (MCP, plugins, default agent, experiments)
 ├── dcp.jsonc                # Dynamic Context Pruning plugin configuration
-├── agents/                  # Agent definitions (11 agents)
-│   ├── build-envoy.md       # Default agent — refines prompts for @build
-│   ├── plan-envoy.md        # Refines prompts for @plan
+├── agents/                  # Agent definitions (10 agents)
+│   ├── build.md             # Default agent — writes, tests, and verifies code
+│   ├── plan.md              # Read-only planning/analysis agent
 │   ├── general.md           # Unrestricted general-purpose agent
-│   ├── build.md             # Code writing + testing subagent
-│   ├── plan.md              # Read-only planning/analysis subagent
 │   ├── coder.md             # File editing specialist subagent
 │   ├── review.md            # Read-only code review subagent
+│   ├── test-runner.md       # Test execution and reporting subagent
 │   ├── search.md            # File/code search subagent
 │   ├── explore.md           # Codebase exploration subagent
 │   ├── browser.md           # Chrome DevTools interaction subagent
@@ -309,32 +288,28 @@ Each skill directory contains a `SKILL.md` with optional YAML frontmatter and co
 
 ## Design Principles
 
-1. **Prompt Quality Over Speed** — The envoy pattern ensures prompts are refined before reaching expensive models, reducing wasted computation and improving output quality.
+1. **Principle of Least Privilege** — Each agent has only the permissions it needs. Reviewers can't edit. Planners can't modify. Test runners can't write files.
 
-2. **Principle of Least Privilege** — Each agent has only the permissions it needs. Reviewers can't edit. Planners can't modify. Envoys can't access files.
+2. **Test Everything** — The build agent is explicitly instructed to run all code it writes. No assumptions, no hallucinated test results. Evidence is required.
 
-3. **Test Everything** — The build agent is explicitly instructed to run all code it writes. No assumptions, no hallucinated test results. Evidence is required.
+3. **Skills as Composable Knowledge** — Domain expertise is modular and loaded on demand rather than baked into system prompts, keeping context windows efficient.
 
-4. **Skills as Composable Knowledge** — Domain expertise is modular and loaded on demand rather than baked into system prompts, keeping context windows efficient.
+4. **Accessibility Equals Testability** — The skills consistently reinforce that semantic HTML and ARIA attributes make both accessible software and reliable tests. One practice serves two goals.
 
-5. **Accessibility Equals Testability** — The skills consistently reinforce that semantic HTML and ARIA attributes make both accessible software and reliable tests. One practice serves two goals.
-
-6. **Model Cost Optimisation** — Lightweight tasks (search, exploration, prompt refinement) use the cheaper Sonnet model; heavy tasks (code generation, planning, review) use Opus.
+5. **Model Cost Optimisation** — Only the orchestrator and planner use Opus. Code review and editing use Sonnet. Pure tool-calling tasks (test execution, file search, exploration, documentation lookup) use Haiku. Each agent sits on the cheapest tier that can reliably do its job.
 
 ## Usage
 
 ### Typical Workflow
 
-1. Start OpenCode — the `build-envoy` agent is active by default.
-2. Describe what you want in natural language (casual is fine).
-3. The envoy refines your request and presents a polished prompt.
-4. Confirm with "Yes", "Go", or "Send it" (or iterate).
-5. The `build` subagent executes: writes code, runs tests, reports results.
-6. Review the output and continue the conversation.
+1. Start OpenCode — the `build` agent is active by default.
+2. Describe what you want in natural language.
+3. The `build` agent writes code, runs tests, requests review, and reports results.
+4. Review the output and continue the conversation.
 
 ### Switching Agents
 
-- Use `@plan-envoy` for planning and analysis tasks.
+- Use `@plan` for planning and analysis tasks (read-only — won't make changes).
 - Use `@general` for unrestricted access to all tools.
 - Subagents are invoked automatically — you don't call them directly.
 
