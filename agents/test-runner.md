@@ -24,15 +24,17 @@ Your job is to:
 
 ## Test Commands
 
+Detect the project's package manager by checking for lock files (`pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`, `bun.lockb`) and use it to run scripts. If detection is ambiguous, ask the caller.
+
 ### Unit Tests
-- **Primary:** `yarn test`
-- **If tests hang:** `yarn test:ci` (uses CI-friendly settings that prevent interactive hangs)
+- **Primary:** `<pm> test` (e.g., `pnpm test`, `yarn test`, `npm test`)
+- **If tests hang:** `<pm> test:ci` (uses CI-friendly settings that prevent interactive hangs)
 
 ### E2E Tests
-- **Primary:** `yarn e2e`
-- **Alternative:** `yarn e2e:local` (for local-only execution)
+- **Primary:** `<pm> e2e`
+- **Alternative:** `<pm> e2e:local` (for local-only execution)
 
-Run whichever commands are requested by the caller. If no specific command is requested, run `yarn test` for unit tests. If asked for "all tests", run both unit and E2E suites.
+Run whichever commands are requested by the caller. If no specific command is requested, run the project's `test` script for unit tests. If asked for "all tests", run both unit and E2E suites.
 
 ## Reporting Format
 
@@ -78,7 +80,7 @@ Include the full command output as evidence so the caller can verify results.
 ## Execution Guidelines
 
 1. Run the requested test command(s) using `bash`
-2. If a command times out or hangs, try the CI variant (`yarn test:ci` instead of `yarn test`)
+2. If a command times out or hangs, try the CI variant (e.g., `test:ci` instead of `test`)
 3. Capture the full output — do not truncate unless the tool forces it
 4. Parse the output to extract pass/fail counts and failing test details
 5. Return the structured report as described above
